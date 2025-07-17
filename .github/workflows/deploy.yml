@@ -2,9 +2,9 @@ name: Django CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   test:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install Dependencies
         run: |
@@ -35,15 +35,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: 🚀 Deploy to VM via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USERNAME }}
-          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@master         # FIXED: correct indentation
+        with:                                     # FIXED: correct indentation
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_PRIVATE_KEY }}
           port: 22
           script: |
-            cd /var/www/myproject/CICD
+            cd /var/www/cicd_backend_bakht       # use correct remote path
             git pull origin main
             source venv/bin/activate
             pip install -r requirements.txt
