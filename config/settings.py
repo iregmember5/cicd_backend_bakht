@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-()en#2_*@jh(u34!_b1^kz10v3mu4@%6k$yo!dk8167l67r+-_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['145.223.79.113', 'localhost', 'ivr.voip', 'bakht.mypowerly.com', 'www.bakht.mypowerly.com']
+ALLOWED_HOSTS = ['145.223.79.113', 'localhost', '127.0.0.1', 'ivr.voip', 'bakht.mypowerly.com', 'www.bakht.mypowerly.com']
 
 
 # Application definition
