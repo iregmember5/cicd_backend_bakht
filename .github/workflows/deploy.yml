@@ -36,18 +36,31 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@master         # FIXED: correct indentation
-        with:                                     # FIXED: correct indentation
+        uses: appleboy/ssh-action@master
+        with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_PRIVATE_KEY }}
           port: 22
           script: |
-            cd /var/www/cicd_backend_bakht       # use correct remote path
+            cd /var/www/cicd_backend_bakht
+
+            echo "✅ Pulling latest code..."
+            git config pull.rebase false
             git pull origin main
+
+            echo "✅ Activating virtual environment..."
             source venv/bin/activate
+
+            echo "✅ Installing dependencies..."
             pip install -r requirements.txt
+
+            echo "✅ Running migrations..."
             python manage.py makemigrations
             python manage.py migrate
+
+            echo "✅ Collecting static files..."
             python manage.py collectstatic --noinput
+
+            echo "✅ Restarting Apache..."
             sudo systemctl restart apache2
