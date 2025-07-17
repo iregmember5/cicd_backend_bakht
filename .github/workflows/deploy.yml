@@ -1,61 +1,55 @@
-name: Django CI/CD to VPS
+name: Django CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
-
+   
     steps:
-      - name: ✅ Checkout code
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v3
+   
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+   
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # use your python requirements file path if in main directory then don’t make any changes.
 
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.10  # ✅ Use stable version for Django
+    - name: Run Tests
+      run: |
+        python manage.py test
+        # use your manage.py path, if in main directory then don’t make any changes.
 
-      - name: 📦 Install dependencies
-        run: |
-          python -m pip install --upgrade pip
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+   
+    steps:
+    - uses: actions/checkout@v3
+   
+    - name: Deploy to VM
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USERNAME }}
+        key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+        script: |
+          cd /var/www/myproject/CICD
+          # use your VPS path where your project is placed.
+          git pull origin main
+          source venv/bin/activate
           pip install -r requirements.txt
-
-      - name: 🚀 Copy files to VPS
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_PRIVATE_KEY }}
-          port: 22
-          source: "."
-          target: "/var/www/cicd_backend_bakht"
-
-      - name: 🖥️ Run commands on VPS
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_PRIVATE_KEY }}
-          port: 22
-          script: |
-            cd /var/www/cicd_backend_bakht
-
-            # Create virtual environment if not exists
-            if [ ! -d "venv" ]; then
-              python3 -m venv venv
-            fi
-
-            source venv/bin/activate
-
-            # Install dependencies
-            pip install --upgrade pip
-            pip install -r requirements.txt
-
-            # Run migrations & collect static files
-            python manage.py migrate
-            python manage.py collectstatic --noinput
-
-            # Restart Apache
-            systemctl restart apache2
+          python manage.py makemigrations
+          python manage.py migrate
+          python manage.py collectstatic --noinput
+          sudo systemctl restart apache2
